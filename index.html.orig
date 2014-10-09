@@ -1,0 +1,740 @@
+<!-- Usage notes:
+     Press 'F' to toggle fullscreen
+	-->
+
+
+<!doctype html>
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+
+		<title>Optimization-based estimation, planning and control</title>
+
+		<meta name="description" content="Research robots">
+		<meta name="author" content="Andrés Valenzuela">
+
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<link rel="stylesheet" href="./reveal.js/css/reveal.css">
+		<link rel="stylesheet" href="./avalenzu.css" id="theme"> <!-- night also cool -->
+
+		<!-- For syntax highlighting -->
+		<!--<link rel="stylesheet" href="./reveal.js/lib/css/zenburn.css">-->
+
+		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
+		<script>
+			if( window.location.search.match( /print-pdf/gi ) ) {
+				var link = document.createElement( 'link' );
+				link.rel = 'stylesheet';
+				link.type = 'text/css';
+				link.href = './reveal.js/css/print/pdf.css';
+				document.getElementsByTagName( 'head' )[0].appendChild( link );
+			}
+		</script>
+
+		<script type="text/javascript" src="./swfobject.js"></script>
+
+		<!--[if lt IE 9]>
+		<script src="lib/js/html5shiv.js"></script>
+		<![endif]-->
+	</head>
+
+	<body>
+
+
+		<div class="reveal">
+
+			<!-- Any section element inside of this container is displayed as a slide -->
+			<div class="slides" id="title">
+				<section style="height: 650px">
+          <h1 class="title">Optimization-based estimation, planning and control</h1>
+          <h2 class="author">
+            Andrés Valenzuela
+            <br/><br/>
+            avalenzu@mit.edu
+            <br/>
+          </h2>
+          <h2 class="author">Research by: M. Antone, H. Dai, R. Deits, M. Fallon, T. Koolen, S. Kuindersma, P. Marion, R. Tedrake, S. Teller, A. Valenzuela</h2>
+
+          <div id="logoimages">
+            <div id="logoimgleft">
+              <img height="75" src="../Images/Logos/drc_logo.png"/>
+            </div>
+            <div id="logoimgcenter">
+              <img height="75" src="../Images/Logos/mit_logo_black_red_large.png"/>
+            </div>
+            <div id="logoimgright">
+              <img height="75" src="../Images/Logos/csail_logo_2C_notext.png"/>
+            </div>
+          </div>
+				</section>
+
+        <section>
+          <img id="drc-logo" src="../Images/Logos/drc_logo.png"/>
+          <img class="photo-landscape" id="photo-top" src="../Images/DRC_Trials/robotsimian_terrain.jpg"/>
+          <img class="photo-landscape" id="photo-top-right" src="../Images/DRC_Trials/chimp_terrain.jpg"/>
+          <img class="photo-landscape" id="photo-top-left" src="../Images/DRC_Trials/atlas_drill.jpg"/>
+          <img class="photo-portrait" id="photo-bottom-left" src="../Images/DRC_Trials/atlas_ladder.jpg"/>
+          <img class="photo-portrait" id="photo-bottom-right" src="../Images/DRC_Trials/schaft.jpg"/>
+          <div class="fragment fade-out" data-fragment-index="0" id="text-bottom">
+            <p>Some of the worlds most advanced robots ...</p>
+          </div>
+          <div class="fragment current-visible" data-fragment-index="0" id="text-bottom">
+            ... took on challenging disaster-response tasks ...
+          </div>
+          <div class="fragment current-visible" id="text-bottom">
+            ... but there was one problem ...
+          </div>
+          <div class="fragment fade-in" id="quote-bottom">
+            <blockquote>
+              ... it was like watching sculpture in motion.<br/> 
+              -- <cite> M. Belfiore, GIZMODO </cite>
+            </blockquote>
+          </div>
+          <div style="position:relative; top:97%" class="footnote-manual">
+            All photos courtesy of Gregory Izzat
+          </div>
+        </section>
+
+        <section>
+          <section>
+            <h2 id="center-title"> Let's speed things up ... </h2>
+          </section>
+          <section>
+            <h1 class="frametitle"> Increase autonomy </h1>
+            <div class="columns">
+              <div class="left-third">
+                <p>
+                Operator identifies location of table and bin...
+                </p>
+                <br/>
+                <br/>
+                <p>
+                ... and then has nothing to do.
+                </p>
+              </div>
+              <div class="right-two-thirds">
+                <video src="../../Videos/IROS2014_Videos/atlas_table_demo_5x.mp4"  muted="muted" data-autoplay/>
+              </div>
+            </div>
+            <div class=centered-60>
+              Segmentation, planning, and execution are done on-the-fly and automatically.
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> Move faster </h1>
+            <div class="centered-60">
+              ... while maintaining accuracy
+            </div>
+            <div class="columns">
+              <div class="left-half">
+                <div>
+                  <video src="../../Videos/IROS2014_Videos/atlas_BDI_stepping_mode.mp4" muted="muted" data-autoplay/>
+                </div>
+                <div class="centered-60">
+                  BDI stepping mode
+                </div>
+              </div>
+              <div class="right-half">
+                <div>
+                  <video src="../../Videos/IROS2014_Videos/atlas_mit_walking.mp4" muted="muted" data-autoplay/>
+                </div>
+                <div class="centered-60" style="width: 100%">
+                  MIT dynamic controller [1]
+                </div>
+              </div>
+            </div>
+            <div class="footnote-manual">
+              [1] Scott Kuindersma, Frank Permenter, and Russ Tedrake. "An efficiently solvable quadratic program for stabilizing dynamic locomotion," In Proceedings of the International Conference on Robotics and Automation, Hong Kong, China, May 2014. IEEE. 
+            </div>
+          </section>
+        </section>
+
+
+				<section>
+          <div id="center-title">
+            <h2> What do we need? </h2>
+            <div class="columns">
+              <div class="left-half" data-markdown>
+                <script type="text/template">
+                  * Drift-free state estimation
+                  * Footstep planning
+                </script>
+              </div>
+              <div class="right-half" data-markdown>
+                <script type="text/template">
+                  * Whole-body planning
+                  * Whole-body control
+                </script>
+              </div>
+            </div>
+          </div>
+				</section>
+
+        <section>
+          <section>
+            <h1 class="frametitle"> Drift-free state estimation </h1>
+            <div class="columns">
+              <div class="right-two-thirds">
+                <video id="atlas_continuous_terrain_traversal" src="../../Videos/IROS2014_Videos/atlas_continuous_terrain_traversal.mp4" muted="muted" data-autoplay controls="true">
+                <script>
+                  document.getElementById('atlas_continuous_terrain_traversal').addEventListener('loadedmetadata', function() {
+                      this.currentTime = 25;
+                      }, false);
+                  document.getElementById('atlas_continuous_terrain_traversal').addEventListener('timeupdate', function() {
+                      if (this.currentTime >= 159) {
+                      this.currentTime = 25;
+                      }
+                      }, false);
+                </script>
+              </div>
+              <div class="left-third" data-markdown>
+                <script type="text/template">
+                  Combines three distinct sensing modalities [2] 
+
+                    * Inertial
+                    * Leg kinematics
+                    * LIDAR
+                </script>
+              </div>
+            </div>
+            <div class="footnote-manual">
+              [2] Maurice F. Fallon, Matthew Antone, Nicholas Roy, and Seth Teller, "Drift-free humanoid state estimation fusing kinematic, inertial and lidar sensing," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> Probabilistic integration</h1>
+            <div class="columns">
+              <div class="left-half">
+                <p>The state vector</p>
+
+                \[
+                x = \begin{bmatrix} w_{b}^{T} & v_{b}^{T} & R & \Delta^{T} \end{bmatrix}
+                \]
+
+                <p>is composed of</p>
+                <ul>
+                  <li> angular veolcity, $w_b$</li>
+                  <li> linear veolcity, $v_b$</li>
+                  <li> orientation, $R$ </li>
+                  <li> position, $\Delta$ </li>
+                </ul>
+              </div>
+              <div class="right-half">
+                <p> The state estimate and its covariance are updated via an Extended Kalman Filter (EKF) </p>
+                <ul>
+                  <li> driven by inertial measurements </li>
+                  <li> leg-kinematics provide additional measurements of velocity </li>
+                  <li> LIDAR provides additional measurements of position </li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="footnote-manual">
+              [3] Adam Bry, Abraham Bachrach, and Nicholas Roy, "State estimation for aggressive flight in gps-denied environments using onboard sensing," In Proceedings of the 2012 IEEE International Conference on Robotics and Automation (ICRA), IEEE, 2012.
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> LIDAR measurements </h1>
+            <div class="centered" style="margin-top=0; margin-bottom: 0">
+            Provide drift correction
+            </div>
+            <div class="columns">
+              <div class="left-half">
+                <div data-markdown>
+                  ### Prior to experiment
+
+                  * Construct probabilistic occupancy map (10 - 30 s)
+                </div>
+                <img class="photo-full-width" src="../Images/Atlas/occupancy_map.png">
+              </div>
+              <div class="right-half">
+                <h3> During <br/> experiment </h3>
+                <div data-markdown>
+                  <script type="text/template">
+                    * Use Gaussian Particle Filter to update LIDAR state estimate
+                    * Per-measurement updates
+                    * Update only the subset of the state corresponding to the current LIDAR plane
+                  </script>
+                </div>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h1 class="frametitle"> Footstep planning </h1>
+            <div class="small">(R. Deits and R. Tedrake)</div>
+            <div class="columns">
+              <h2 id="center-title">vs.</h2>
+              <div class="left-half">
+                <img class="photo-full-width" src="../Images/Atlas/Footstep_Planning/stepping_stones_no_bypass_3.png" alt="">
+              </div>
+              <div class="right-half">
+                <img class="photo-full-width" src="../Images/Atlas/Footstep_Planning/stepping_stones_bypass_3.png" alt="">
+              </div>
+            </div>
+          </section>
+          <section>
+            <h2 class="frametitle"> Finding safe regions </h2>
+            Iterative Regional Inflation by Semidefinite programming (IRIS) [4]
+            <div class="columns">
+              <div class="left-half">
+                <img class="photo-full-width" src="../Images/Diagrams/iris_demo.svg" alt="">
+              </div>
+              <div class="right-half">
+                <img class="photo-full-width" src="./Images/atlas_sensed_color_3/2.png" alt="">
+              </div>
+            </div>
+            <div class="footnote-manual">
+              [4] R. L. H. Deits and R. Tedrake, "Computing large convex regions of obstacle-free space through semidefinite programming," Workshop on the Algorithmic Fundamentals of Robotics (WAFR), Aug. 2014.
+            </div>
+          </section>
+          <section>
+            <h2 class="frametitle"> Footstep planning with mixed-integer convex programming [5]</h2>
+            <p>
+            Minimize the sum of 
+            <ul>
+              <li>weighted distance to the goal</li>
+              <li>weigted between footsteps</li>
+              <li>number of steps taken</li>
+            </ul>
+            </p>
+            <p>
+            subject to
+            </p>
+            <ul>
+              <li> Assignment of footsteps to safe regions (Integer)</li>
+              <li> Conservative, convex bounds on relative footstep placement (Continuous)</li>
+            </ul>
+            <p>
+            This can be expressed as a mixed-integer convex program.
+            </p>
+            <div class="footnote-manual"> 
+              [5] Robin Deits and Russ Tedrake, "Footstep Planning on Uneven Terrain with Mixed-Integer Convex Optimization," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle">Performance</h1>
+            <p>Setting up the problem in MATLAB and solving the mixed-integer convex program with Gurobi gives results on the order of </p>
+            <div class="columns">
+              <div class="left-third">
+                <ul>
+                  <li>a few seconds to a minute for 10-20 footstep plans</li>
+                  <li> < 1 s for plans with fewer than 10 footsteps </li>
+                </ul>
+              </div>
+              <div class="right-two-thirds">
+                <video src="../../Videos/IROS2014_Videos/atlas_footstep_planning.mp4" controls="true" loop="true" data-autoplay></video>
+              </div>
+            </div>
+              <p> Available in the Drake toolbox:
+              <a href="http://drake.mit.edu">http://drake.mit.edu</a>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h1 class="frametitle"> Whole-body planning </h1>
+            <div class="centered" style="margin-bottom: 0">
+              Goal: plan dynamically feasible motion subject to contact constraints
+            </div>
+                  <!--<img class="absolutely-centered" src="../Images/Diagrams/kinematics.svg">-->
+            <div class="columns">
+              <!--<div class="left-half">-->
+              <img class="left-half" src="../Images/Diagrams/base_layer.svg">
+              <div class="fragment fade-out" data-fragment-index="1"> 
+                <img class="left-half" src="../Images/Diagrams/body.svg">
+              </div>
+              <div class="fragment fade-in" data-fragment-index="0"> 
+                <div class="fragment fade-out" data-fragment-index="1"> 
+                  <img class="left-half" src="../Images/Diagrams/joint_torques.svg">
+                </div>
+                <img class="left-half" src="../Images/Diagrams/contact_forces.svg">
+              </div>
+              <div class="fragment fade-in" data-fragment-index="1"> 
+                <img class="left-half" src="../Images/Diagrams/centroidal_dynamics.svg">
+              </div>
+              <div class="fragment fade-in" data-fragment-index="2"> 
+                <img class="left-half" src="../Images/Diagrams/body.svg">
+              </div>
+                <div  class="fragment current-visible" data-fragment-index="0"> 
+                  <div class="right-half-absolute">
+                    <div class="centered">
+                      <h4> Full dynamics </h4>
+                      <ul>
+                        <li>State, inputs, contact wrenches as decision variables</li>
+                        <li>Accomodates kinematic constraints</li>
+                        <li>Very large nonlinear program (NLP)</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="fragment current-visible" data-fragment-index="1"> 
+                  <div class="right-half-absolute">
+                    <div class="centered">
+                      <h4> Centroidal dynamics [6]</h4>
+                      <ul>
+                        <li>COM state, angular momentum, contact wrenches as decision variables</li>
+                        <li>No kinematics</li>
+                        <li>Small NLP</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                <div class="fragment fade-in" data-fragment-index="2"> 
+                  <div class="right-half-absolute">
+                    <div class="centered">
+                      <h4> Centroidal dynamics + full kinematics</h4>
+                      <ul>
+                        <li>COM state, angular momentum, contact wrenches, joint state  as decision variables</li>
+                        <li>Accomodates kinematic constraints</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="position:relative; top:70%" class="footnote-manual">
+                [6] Orin, D.E.; Goswami, A, "Centroidal Momentum Matrix of a humanoid robot: Structure and properties," Intelligent Robots and Systems, 2008. IROS 2008. IEEE/RSJ International Conference on , vol., no., pp.653,659, 22-26 Sept. 2008
+              </div>
+            </section>
+          <section>
+            <h3 class="frametitle">Trajectory optimization with centroidal dynamics and full kinematics [7]</h3>
+            <div class="centered" style="margin-bottom:0" >
+              Minimize COM acceleration, joint velocities, and deviation from nominal posture
+              <div class="columns">
+                <div class="left-half" style="margin-bottom:0" >
+                  <h5>Decision variables<br/>(per knot point):</h5>
+                  <ul>
+                    <li>Joint positions and velocities</li>
+                    <li>COM positions, velocities, and accelerations</li>
+                    <li>Angular momentum and its time-derivative</li>
+                    <li>Contact forces/torques</li>
+                    <li>Time interval</li>
+                  </ul>
+                </div>
+                <div class="right-half" style="margin-bottom:0" >
+                  <h5>Constraints:<br/>&nbsp<br/></h5>
+                  <ul>
+                    <li>Centroidal dynamics</li>
+                    <li>Kinematic constraints</li>
+                    <li>Constraints on contact wrenches (e.g. friction cones)</li>
+                    <li>Consistency between kinematics and centroidal dynamics</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="footnote-manual" style="margin-top:0">
+              [7] Hongkai Dai, Andrés Valenzuela, and Russ Tedrake, "Whole-body motion planning with simple dynamics and full kinematics," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> What can we plan with this? </h1>
+            <div class="centered-60">
+              Things we hope to implement on Atlas<br/>(e.g. running, jumping)
+            </div>
+            <div class="columns">
+              <div class="left-half">
+                <video src="../../Videos/IROS2014_Videos/jump_cinderblock_front.mp4 "  muted="muted" loop="true" data-autoplay/>
+              </div>
+              <div class="right-half">
+                <video src="../../Videos/IROS2014_Videos/jump_cinderblock_side.mp4"  muted="muted" loop="true" data-autoplay>
+                  Jumping Video?
+                </video>
+              </div>
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> What else can we plan with this? </h1>
+            <div class="centered">
+                Things we probably don't want to do with the Atlas ...
+            </div>
+            <div class="centered-60" style="margin-bottom:0">
+                <video class="eighty" id="salmon_ladder" src="./Videos/Salmon_Ladder/salmon_ladder_2.mp4" muted="muted" onended="run()" data-autoplay></video>
+                <p> Available in the Drake toolbox:
+                <a href="http://drake.mit.edu">http://drake.mit.edu</a>
+                </p>
+            </div>
+            <script>
+video_count = 2;
+videoPlayer = document.getElementById("salmon_ladder");
+
+function run(){
+  video_count++;
+  if (video_count == 5) video_count = 1;
+  var nextVideo = "./Videos/Salmon_Ladder/salmon_ladder_"+video_count+".mp4";
+  videoPlayer.src = nextVideo;
+  videoPlayer.play();
+};
+            </script>
+
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h1 class="frametitle"> Whole-body control </h1>
+            <div class="small">(S. Kuindersma, F. Permenter, T. Koolen, R. Tedrake)</div>
+            <div class="columns">
+              <div class="left-half">
+                <video src="../../Videos/IROS2014_Videos/atlas_toe_off.mp4" controls="true" muted="muted" data-autoplay loop="true"></video>
+                <!--<script>-->
+                  <!--document.getElementById('atlas_balancing').addEventListener('loadedmetadata', function() {-->
+                      <!--this.currentTime = 3;-->
+                      <!--}, false);-->
+                <!--</script>-->
+              </div>
+              <div class="right-half">
+                <video src="../../Videos/IROS2014_Videos/atlas_truckin_with_a_truss.mp4" controls="true" muted="muted" data-autoplay loop="true"></video>
+              </div>
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> FastQP</h1>
+            <div class="centered-70">
+              Efficiently solvable, single-step model predictive control (MPC) with a quadratic objective [6]. 
+            </div>
+            <div class="left-80">
+              Distinguishing features: <br/><br/>
+              <ul>
+                <li> Use optimal cost-to-go for simple dynamic model in control Lyapunov function (CLF) </li>
+                <li> Exploit temporal consistency of active inequality constraints</li>
+              </ul>
+              <p> Available in the Drake toolbox:
+              <a href="http://drake.mit.edu">http://drake.mit.edu</a>
+              </p>
+            </div>
+            <div class="footnote-manual">
+              [1] Scott Kuindersma, Frank Permenter, and Russ Tedrake. "An efficiently solvable quadratic program for stabilizing dynamic locomotion," In Proceedings of the International Conference on Robotics and Automation, Hong Kong, China, May 2014. IEEE. 
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> Optimal control of simple dynamics </h1>
+            <ul>
+              <li> Usefulness of optimal control solutions for simple dynamic models is known. E.g. [8],[9] </li>
+              <li>In addition to optimal controller, these problems also yield an optimal cost-to-go function. </li>
+              <li> This function can be used as a CLF for the full system
+            </ul>
+            <div class="footnote-manual">
+              [8] S. Kajita, F. Kanehiro, K. Kaneko, K. Fujiwara, K. Harada, K. Yokoi, and H. Hirukawa, "Biped walking pattern generation by using preview control of zero-moment point," In Proceedings of the 2003 IEEE International Conference on Robotics and Automation, pp. 1620–1626, 2003.
+            </div>
+            <div class="footnote-manual">
+              [9] D. Dimitrov, A. Sherikov, P-B. Wieber, "A sparse model predictive control formulation for walking motion generation," In Proceedings of the 2011 IEEE/RSJ Conference on Intelligent Robots and Systems (IROS), pp. 2292-2299, 2011.
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle"> Compute torques for the full robot </h1>
+            <p>
+              Perform one-step model predictive control (MPC) incorporating the optimal cost-to-go from the simple dynamics:
+            </p>
+            <div class="left-80">
+              <p>
+              Select torques to so as to descend the simple dynamics CLF subject to:
+              </p>
+              <ul>
+                <li>whole-body dynamics</li>
+                <li>no-slip for stance feet</li>
+                <li>contact forces inside polyhedral approximation of friction cone</li>
+              </ul>
+            </div>
+            For CLFs derived from time-varying LQR solutions, this is a quadratic program (QP) with linear equality and in-equality constraints.
+          </section>
+          <section>
+            <h1 class="frametitle"> Efficient active-set method </h1>
+            <div class="fragment fade-out" data-fragment-index="0">
+              <p>
+              Given the solution to the QP at time $t[n-1]$ and the corresponding active-set $\mathcal{A}$, initialize the active-set for $t[n]$ to be $\mathcal{A}$. Then repeat
+              </p>
+              <div class="centered-70">
+                <ol>
+                  <li>Solve QP with current active-set from $t[n-1]$</li>
+                  <ul>
+                    <li>linear system solve</li>
+                    <li>structure of QP allows efficient solution</li>
+                  </ul>
+                  <li>Update active-set</li>
+                </ol>
+              </div>
+              <p>
+              until the KKT conditions for the inequality constrained QP are satisfied or a maximum number of iterations is reached. 
+              </p>
+            </div>
+            <div class="fragment fade-in" data-fragment-index="0">
+              <h2 id="text-center"> In walking, 97% of calls require only one iteration</h2>
+            </div>
+          </section>
+          <section>
+            <h1 class="frametitle">Performance comparision</h1>
+            <div class="centered-80">
+            Comparison of average solve times during a fixed walking pattern ([6], Table 1)
+            </div>
+            <div class="centered">
+              <table>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>FastQP</th>
+                    <th>Gurobi (DS<sup>1</sup>)</th>
+                    <th>CVXGEN</th>
+                    <th>Gurobi (B<sup>2</sup>)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                <tr>
+                  <td>Solve time</td>
+                  <td>0.2 ms</td>
+                  <td>1.0 ms</td>
+                  <td>2.2 ms</td>
+                  <td>3.1 ms</td>
+                </tr>
+                <tr/>
+                  </tbody>
+                </table>
+                <br/>
+                <div class="small">
+                  <ol>
+                    <li>DS = Dual simplex method</li>
+                    <li>B = Barrier method</li>
+                  </ol>
+                </div>
+              <p> Available in the Drake toolbox:
+              <a href="http://drake.mit.edu">http://drake.mit.edu</a>
+              </p>
+              </div>
+          </section>
+        </section>
+        <section>
+          <section>
+            <h2 id="center-title">We're looking forward to ...</h2>
+          </section>
+          <section>
+            <h2 class="frametitle"> ... a robot that acts more autonomously ... </h2>
+            <div class="columns">
+              <div class="left-half">
+              <p>
+              Turning on a drill with automated visual correction
+              </p>
+              <video src="../../Videos/IROS2014_Videos/atlas_turns_on_drill.mp4" controls="true" loop="true" data-autoplay></video>
+              </div>
+              <div class="right-half">
+                <video src="../../Videos/IROS2014_Videos/atlas_collision_free_reach.mp4" controls="true" loop="true" data-autoplay></video>
+              Collision-free reach planning
+              </div>
+            </div>
+          </section>
+          <section>
+            <h2 class="frametitle"> ... and moves more dynamically. </h2>
+            <div class="centered">
+              <video src="../../Videos/IROS2014_Videos/atlas_running_in_simulation_no_torque_limits.mp4" controls="true" loop="true" data-autoplay></video>
+            </div>
+          </section>
+        </section>
+        <section>
+          <div class="columns" style="margin-bottom:0">
+            <h1 class="frametitle">Acknowledgements</h1>
+            <div class="left-half">
+              <h4>Supported by:</h4>
+              <ul>
+                <li>DARPA DRC Program</li>
+                <li>Fannie and John Hertz Foundation</li>
+                <li>David S. Y. Wong and Harold Wong Fellowship</li>
+              </ul>
+            </div>
+            <div class="right-half">
+              <h4>Special thanks:</h4>
+              <ul>
+                <li>MIT DRC Team</li>
+                <li>Greg Izatt (DRC Trials Photos)</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+        <section>
+          <h1 class="frametitle">Thank you!</h1>
+          <div class="left-80" id="references">
+          <h4>References:</h4>
+            <div class="footnote">
+              Scott Kuindersma, Frank Permenter, and Russ Tedrake, "An efficiently solvable quadratic program for stabilizing dynamic locomotion," In Proceedings of the International Conference on Robotics and Automation, Hong Kong, China, May 2014. IEEE. 
+            </div>
+            <div class="footnote">
+              Maurice F. Fallon, Matthew Antone, Nicholas Roy, and Seth Teller, "Drift-free humanoid state estimation fusing kinematic, inertial and lidar sensing," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+            <div class="footnote">
+              Adam Bry, Abraham Bachrach, and Nicholas Roy, "State estimation for aggressive flight in gps-denied environments using onboard sensing," In Proceedings of the 2012 IEEE International Conference on Robotics and Automation (ICRA), IEEE, 2012.
+            </div>
+            <div class="footnote">
+              Robin Deits and Russ Tedrake, "Computing large convex regions of obstacle-free space through semidefinite programming," Workshop on the Algorithmic Fundamentals of Robotics (WAFR), Aug. 2014.
+            </div>
+            <div class="footnote"> Robin Deits and Russ Tedrake, "Footstep Planning on Uneven Terrain with Mixed-Integer Convex Optimization," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+            <div class="footnote">
+              Orin, D.E.; Goswami, A, "Centroidal Momentum Matrix of a humanoid robot: Structure and properties," Intelligent Robots and Systems, 2008. IROS 2008. IEEE/RSJ International Conference on , vol., no., pp.653,659, 22-26 Sept. 2008
+            </div>
+            <div class="footnote">
+              Hongkai Dai, Andrés Valenzuela, and Russ Tedrake, "Whole-body motion planning with simple dynamics and full kinematics," To appear in Proceedings of the 14th IEEE-RAS International Conference on Humanoid Robots (Humanoids), 2014. 
+            </div>
+            <div class="footnote">
+              S. Kajita, F. Kanehiro, K. Kaneko, K. Fujiwara, K. Harada, K. Yokoi, and H. Hirukawa, "Biped walking pattern generation by using preview control of zero-moment point," In Proceedings of the 2003 IEEE International Conference on Robotics and Automation, pp. 1620–1626, 2003.
+            </div>
+            <div class="footnote">
+              D. Dimitrov, A. Sherikov, P-B. Wieber, "A sparse model predictive control formulation for walking motion generation," In Proceedings of the 2011 IEEE/RSJ Conference on Intelligent Robots and Systems (IROS), pp. 2292-2299, 2011.
+            </div>
+          </div>
+        </section>
+		</div>
+  </div>
+
+		<script src="./reveal.js/lib/js/head.min.js"></script>
+		<script src="./reveal.js/js/reveal.min.js"></script>
+
+		<script>
+
+			// Full list of configuration options available here:
+			// https://github.com/hakimel/reveal.js#configuration
+			Reveal.initialize({
+				controls: true,
+				progress: true,
+				history: true,
+				center: false,
+				slideNumber: true,
+
+		    // Factor of the display size that should remain empty around the content
+		    margin: 0,
+
+		    // Bounds for smallest/largest possible scale to apply to content
+		    minScale: 0.2,
+		    maxScale: 4.0,
+
+				theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
+				transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/fade/none
+
+				// Parallax scrolling
+				// parallaxBackgroundImage: 'https://s3.amazonaws.com/hakim-static/reveal-js/reveal-parallax-1.jpg',
+				// parallaxBackgroundSize: '2100px 900px',
+
+        math: {
+          mathjax: './MathJax/MathJax.js',
+          config: 'TeX-AMS_HTML-full',  // See http://docs.mathjax.org/en/latest/config-files.html
+        },
+
+				// Optional libraries used to extend on reveal.js
+				dependencies: [
+					{ src: './reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+					{ src: './reveal.js/plugin/markdown/marked.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: './reveal.js/plugin/markdown/markdown.js', condition: function() { return !!document.querySelector( '[data-markdown]' ); } },
+					{ src: './reveal.js/plugin/math/math.js', async: true },
+					{ src: './reveal.js/plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+					{ src: './reveal.js/plugin/zoom-js/zoom.js', async: true, condition: function() { return !!document.body.classList; } },
+					{ src: './reveal.js/plugin/notes/notes.js', async: true, condition: function() { return !!document.body.classList; } }
+				]
+			});
+
+		</script>
+
+	</body>
+</html>
